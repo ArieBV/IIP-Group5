@@ -19,6 +19,7 @@ int ledOn = 0; //to control the LED.
 void setup() {
   Serial.begin(115200); //serial
   CircuitPlayground.begin(); 
+  CircuitPlayground.setAccelRange(LIS3DH_RANGE_2_G);
 }
 
 void loop() {
