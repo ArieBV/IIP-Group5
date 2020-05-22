@@ -7,18 +7,15 @@
 #define PIN_NUM 3
 
 int sampleRate = 100; //samples per second
-int sampleInterval = 1000000/sampleRate; //Inverse of SampleRate
+int sampleInterval = 1000000 / sampleRate; //Inverse of SampleRate
 int  data[PIN_NUM]; //data array
-char dataID[PIN_NUM] = {'X','Y','Z'}; //data label
-int  pinID[PIN_NUM]  = {A0, A1, A2}; //corresponding pins
-
+char dataID[PIN_NUM] = {'X', 'Y', 'Z'}; //data label
+int  pinID[PIN_NUM] = {A0, A1, A2}; //corresponding pins
 long timer = micros(); //timer
-
-int ledOn = 0; //to control the LED.
 
 void setup() {
   Serial.begin(115200); //serial
-  CircuitPlayground.begin(); 
+  CircuitPlayground.begin();
   CircuitPlayground.setAccelRange(LIS3DH_RANGE_2_G);
 }
 
@@ -48,13 +45,21 @@ void sendDataToProcessing(char symbol, int data) {
 void getDataFromProcessing() {
   while (Serial.available()) {
     char inChar = (char)Serial.read();
+    CircuitPlayground.clearPixels();
     if (inChar == 'a') { //when an 'a' charactor is received.
-      ledOn = 1;
-      digitalWrite(LED_BUILTIN, ledOn); //turn on the built in LED on Arduino Uno
-    }
-    if (inChar == 'b') { //when an 'b' charactor is received.
-      ledOn = 0;
-      digitalWrite(LED_BUILTIN, 0); //turn on the built in LED on Arduino Uno
+      CircuitPlayground.setPixelColor(6, 0, 255, 0);
+      CircuitPlayground.setPixelColor(7, 0, 255, 0);
+      CircuitPlayground.setPixelColor(8, 0, 255, 0);
+    } if (inChar == 'b') { //when an 'b' charactor is received.
+      CircuitPlayground.setPixelColor(1, 0, 255, 0);
+      CircuitPlayground.setPixelColor(2, 0, 255, 0);
+      CircuitPlayground.setPixelColor(3, 0, 255, 0);
+    } if (inChar == 'd') { //when an 'c' charactor is received.
+      CircuitPlayground.setPixelColor(4, 0, 255, 0);
+      CircuitPlayground.setPixelColor(5, 0, 255, 0);
+    }  if (inChar == 'c') { //when an 'd' charactor is received.
+      CircuitPlayground.setPixelColor(0, 0, 255, 0);
+      CircuitPlayground.setPixelColor(9, 0, 255, 0);
     }
   }
 }
