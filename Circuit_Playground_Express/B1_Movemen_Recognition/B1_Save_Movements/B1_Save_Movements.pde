@@ -16,7 +16,7 @@ float[][] diffArray = new float[sensorNum][streamSize]; //diff calculation: subs
 
 float[] modeArray = new float[streamSize]; //To show activated or not
 float[][] thldArray = new float[sensorNum][streamSize]; //diff calculation: substract
-int activationThld = 20; //The diff threshold of activiation
+int activationThld = 10; //The diff threshold of activiation
 
 int windowSize = 100; //The size of data window
 float[][] windowArray = new float[sensorNum][windowSize]; //data window collection
@@ -162,8 +162,6 @@ void serialEvent(Serial port) {
       }
     }
   }
-
-
   return;
 }
 
