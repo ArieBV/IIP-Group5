@@ -58,7 +58,7 @@ boolean dataUpdated = false;
 void setup() {
   size(1920, 1080, P2D);
   initSerial();
-  loadTrainARFF(dataset="A0GestTest.arff"); //load a ARFF dataset
+  loadTrainARFF(dataset="A012GestTest.arff"); //load a ARFF dataset
   trainLinearSVC(C=64);             //train a SV classifier
   setModelDrawing(unit=2);         //set the model visualization (for 2D features)
   evaluateTrainSet(fold=5, isRegression=false, showEvalDetails=true);  //5-fold cross validation
