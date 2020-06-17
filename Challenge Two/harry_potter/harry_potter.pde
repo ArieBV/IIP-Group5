@@ -57,8 +57,9 @@ boolean dataUpdated = false;
 
 int xTarget = 1;
 int yTarget = 1;
-int targetRadius = 200;
+int targetDiameter = 200;
 String target = "A";
+color colour;
 
 int goal = 10;
 int targetsHit = 0;
@@ -76,6 +77,7 @@ void setup() {
   square = new SqrOsc(this);
   createCircle();
 }
+
 
 void draw() {
   background(51);
@@ -132,21 +134,21 @@ void draw() {
   if (targetsHit != goal) {
     switch(target) {
     case "A":
-      fill(255, 0, 0);
+      colour = color(255, 0, 0);
       break;
     case "B":
-      fill(0, 255, 0);
+      colour = color(0, 255, 0);
       break;
     case "C":
-      fill(0, 0, 255);
+      colour = color(0, 0, 255);
       break;
     case "D":
-      fill(255, 255, 0);
+      colour = color(255, 255, 0);
       break;
     }
-    ellipse(xTarget, yTarget, targetRadius, targetRadius);
+     myCircle(xTarget, yTarget, targetDiameter, colour);
     targetHit(mouseX, mouseY, target);
-    totalTime ++;
+    totalTime = millis();
   } else {
     textSize(26);
     text("Your Time was: " + totalTime, width/2, height/2);
@@ -284,12 +286,39 @@ void createCircle() {
     target = "D";
     break;
   }
-  xTarget = int(random(0+targetRadius/2, width-targetRadius/2));  
-  yTarget = int(random(0+targetRadius/2, height-targetRadius/2));
+  xTarget = int(random(0+targetDiameter/2, width-targetDiameter/2));  
+  yTarget = int(random(0+targetDiameter/2, height-targetDiameter/2));
 } 
 void targetHit(int x, int y, String prediction) {
-  if (prediction == target && (x > xTarget-targetRadius/2 && x < xTarget+targetRadius/2) && (y > yTarget-targetRadius/2 && y < yTarget+targetRadius/2)) {
+  if (prediction == target && (x > xTarget-targetDiameter/2 && x < xTarget+targetDiameter/2) && (y > yTarget-targetDiameter/2 && y < yTarget+targetDiameter/2)) {
     targetsHit++;
     createCircle();
   }
+}
+
+void myCircle(int x, int y, int d, color c) {
+  float xx, yy;
+  PVector p;
+  float r = d * 0.5;
+  fill(c);
+  beginShape();
+  for (float i = 0; i < TAU; i += TAU / 360) {
+    xx = x + r * cos(i);
+    yy = y + r * sin(i);
+    p = res(xx, yy);
+    curveVertex(p.x, p.y);
+  }
+  endShape(CLOSE);
+}
+
+PVector res(float x, float y) {
+  float scl, ang, off;
+  PVector p;
+  p = new PVector(x, y);
+  scl = 0.0001;
+  ang = noise(p.x * scl, p.y * scl, frameCount * 0.001) * 200;
+  off = noise(p.x * scl, p.y * scl, frameCount * 0.001) * 50;
+  p.x += cos(ang) * off;
+  p.y += sin(ang) * off;
+  return p;
 }
