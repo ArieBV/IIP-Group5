@@ -10,6 +10,10 @@
 import processing.sound.*;
 SqrOsc square;
 
+SoundFile file1;
+SoundFile file2;
+SoundFile file3;
+SoundFile file4;
 
 import papaya.*;
 import processing.serial.*;
@@ -76,12 +80,28 @@ void setup() {
 
   square = new SqrOsc(this);
   createCircle();
+
+  file1 = new SoundFile(this, "sound/Song1.wav");
+  file2 = new SoundFile(this, "sound/Song2.wav");
+  file3 = new SoundFile(this, "sound/Song3.wav");
+  file4 = new SoundFile(this, "sound/Song4.wav");
 }
 
 
 void draw() {
   background(51);
   fill(255);
+  textSize(26);
+  text("Destroy the targets as fast as possible!", 700, 40);
+  fill(255,0,0);
+  text("Circle",300,100);
+  fill(0,255,0);
+  text("Vertical",700,100);
+  fill(0,0,255);
+  text("Horizontal",1100,100);
+  fill(255,255,0);
+  text("V-Shape",1500,100);
+
   float[] X = {m_x, sd_x, m_y, sd_y, m_z, sd_z}; 
   prediction = getPrediction(X);
 
@@ -100,20 +120,20 @@ void draw() {
     //Play different sounds and show different color based on the prediction
     if (prediction.equals("A")) {
       fill(255, 0, 0);
-      square.play();
-      square.freq(200);
+      //square.play();
+      //square.freq(200);
     } else if (prediction.equals("B")) {
       fill(0, 255, 0);
-      square.play();
-      square.freq(400);
+      //square.play();
+      //square.freq(400);
     } else if (prediction.equals("C")) {
       fill(0, 0, 255);
-      square.play();
-      square.freq(600);
+      //square.play();
+      //square.freq(600);
     } else if (prediction.equals("D")) {
       fill(255, 255, 0);
-      square.play();
-      square.freq(800);
+      //square.play();
+      //square.freq(800);
     }
     if (spellTime <= 0) {
       showSpell = false;
@@ -146,12 +166,13 @@ void draw() {
       colour = color(255, 255, 0);
       break;
     }
-     myCircle(xTarget, yTarget, targetDiameter, colour);
+    myCircle(xTarget, yTarget, targetDiameter, colour);
     targetHit(mouseX, mouseY, target);
     totalTime = millis();
   } else {
+    fill(255,255,255);
     textSize(26);
-    text("Your Time was: " + totalTime, width/2, height/2);
+    text("Your Time was: " + totalTime/1000.0, width/2-100, height/2);
   }
 
 
@@ -287,11 +308,25 @@ void createCircle() {
     break;
   }
   xTarget = int(random(0+targetDiameter/2, width-targetDiameter/2));  
-  yTarget = int(random(0+targetDiameter/2, height-targetDiameter/2));
+  yTarget = int(random(200+targetDiameter/2, height-targetDiameter/2));  //Start from 200 so it is not infront of the explanation text
 } 
 void targetHit(int x, int y, String prediction) {
   if (prediction == target && (x > xTarget-targetDiameter/2 && x < xTarget+targetDiameter/2) && (y > yTarget-targetDiameter/2 && y < yTarget+targetDiameter/2)) {
     targetsHit++;
+    switch(prediction) {
+    case "A":
+      file1.play();
+      break;
+    case "B":
+      file2.play();
+      break;
+    case "C":
+      file3.play();
+      break;
+    case "D":
+      file4.play();
+      break;
+    }
     createCircle();
   }
 }
