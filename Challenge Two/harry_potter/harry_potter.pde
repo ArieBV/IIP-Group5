@@ -15,6 +15,7 @@ SoundFile file2;
 SoundFile file3;
 SoundFile file4;
 
+
 import papaya.*;
 import processing.serial.*;
 Serial port; 
@@ -69,6 +70,9 @@ int goal = 10;
 int targetsHit = 0;
 long totalTime = 0;
 
+ParticleSystem ps;
+
+
 void setup() {
   size(1920, 1080, P2D);
   initSerial();
@@ -85,22 +89,25 @@ void setup() {
   file2 = new SoundFile(this, "sound/Song2.wav");
   file3 = new SoundFile(this, "sound/Song3.wav");
   file4 = new SoundFile(this, "sound/Song4.wav");
+
+  ps = new ParticleSystem();
 }
 
 
 void draw() {
   background(51);
   fill(255);
+  stroke(0);
   textSize(26);
   text("Destroy the targets as fast as possible!", 700, 40);
-  fill(255,0,0);
-  text("Circle",300,100);
-  fill(0,255,0);
-  text("Vertical",700,100);
-  fill(0,0,255);
-  text("Horizontal",1100,100);
-  fill(255,255,0);
-  text("V-Shape",1500,100);
+  fill(255, 0, 0);
+  text("Circle", 300, 100);
+  fill(0, 255, 0);
+  text("Vertical", 700, 100);
+  fill(0, 0, 255);
+  text("Horizontal", 1100, 100);
+  fill(255, 255, 0);
+  text("V-Shape", 1500, 100);
 
   float[] X = {m_x, sd_x, m_y, sd_y, m_z, sd_z}; 
   prediction = getPrediction(X);
@@ -114,6 +121,10 @@ void draw() {
     square.stop();
   }
   if (showSpell) {
+
+  
+  
+  
     spellTime--;  //Decrese the counter for the spell
 
 
@@ -170,11 +181,12 @@ void draw() {
     targetHit(mouseX, mouseY, target);
     totalTime = millis();
   } else {
-    fill(255,255,255);
+    fill(255, 255, 255);
     textSize(26);
     text("Your Time was: " + totalTime/1000.0, width/2-100, height/2);
   }
 
+  ps.run();
 
   // Place four targets
   //fill(2550, 0, 0);
@@ -316,16 +328,28 @@ void targetHit(int x, int y, String prediction) {
     switch(prediction) {
     case "A":
       file1.play();
+          ps.setColor(color(255,0,0));
       break;
     case "B":
       file2.play();
+          ps.setColor(color(0,255,0));
+
       break;
     case "C":
       file3.play();
+          ps.setColor(color(0,0,255));
+
       break;
     case "D":
       file4.play();
+          ps.setColor(color(255,255,0));
+
       break;
+    }
+    ps.setPosition(new PVector(xTarget, yTarget));
+    for (int i = 0; i < 30; i++) {
+
+      ps.addParticle();
     }
     createCircle();
   }
@@ -356,4 +380,89 @@ PVector res(float x, float y) {
   p.x += cos(ang) * off;
   p.y += sin(ang) * off;
   return p;
+}
+
+
+
+class ParticleSystem {
+  ArrayList<Particle> particles;
+  PVector origin;
+  color colour;
+
+  ParticleSystem() {
+    particles = new ArrayList<Particle>();
+  }
+  
+  void setPosition(PVector position){
+    origin = position.copy();
+  }
+
+  void addParticle() {
+    particles.add(new Particle(origin,this.colour));
+  }
+  void setColor(color c){
+    this.colour = c;
+  }
+
+  void run() {
+    for (int i = particles.size()-1; i >= 0; i--) {
+      Particle p = particles.get(i);
+      p.run();
+      if (p.isDead()) {
+        particles.remove(i);
+      }
+    }
+  }
+}
+
+
+// A simple Particle class
+
+class Particle {
+  PVector position;
+  PVector velocity;
+  PVector acceleration;
+  float lifespan;
+  color colour;
+  
+  void setColor(color c){
+    this.colour = c;
+  }
+
+  Particle(PVector l,color c) {
+    this.colour = c;
+    acceleration = new PVector(0, 0.05);
+    velocity = new PVector(random(-1, 1), random(-2, 0));
+    PVector p = new PVector(random(l.x-60,l.x+60),random(l.y-60,l.y+60));
+    position = p;
+    lifespan = 255.0;
+  }
+
+  void run() {
+    update();
+    display();
+  }
+
+  // Method to update position
+  void update() {
+    velocity.add(acceleration);
+    position.add(velocity);
+    lifespan -= 1.0;
+  }
+
+  // Method to display
+  void display() {
+    stroke(this.colour, lifespan);
+    fill(this.colour, lifespan);
+    ellipse(position.x, position.y, 8, 8);
+  }
+
+  // Is the particle still useful?
+  boolean isDead() {
+    if (lifespan < 0.0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }
