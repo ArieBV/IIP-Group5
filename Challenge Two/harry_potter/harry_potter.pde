@@ -8,16 +8,17 @@
 
 
 import processing.sound.*;
-SqrOsc square;
+import papaya.*;
+import processing.serial.*;
 
+//Variables to store the sound files
 SoundFile file1;
 SoundFile file2;
 SoundFile file3;
 SoundFile file4;
 
 
-import papaya.*;
-import processing.serial.*;
+
 Serial port; 
 
 int sensorNum = 4; 
@@ -29,9 +30,9 @@ float[][] diffArray = new float[sensorNum][streamSize]; //diff calculation: subs
 
 float[] modeArray = new float[streamSize]; //To show activated or not
 float[][] thldArray = new float[sensorNum][streamSize]; //diff calculation: substract
-int activationThld = 80; //The diff threshold of activiation
+int activationThld = 200; //The diff threshold of activiation
 
-int windowSize = 200; //The size of data window
+int windowSize = 250; //The size of data window
 float[][] windowArray = new float[sensorNum][windowSize]; //data window collection
 boolean b_sampling = false; //flag to keep data collection non-preemptive
 int sampleCnt = 0; //counter of samples
@@ -39,7 +40,7 @@ int sampleCnt = 0; //counter of samples
 //Save
 Table csvData;
 boolean b_saveCSV = false;
-String dataSetName = "A0GestTest"; 
+String dataSetName = "A012GestTest"; 
 String[] attrNames = new String[]{"m_x", "sd_x", "label"};
 boolean[] attrIsNominal = new boolean[]{false, false, true};
 int labelIndex = 0;
@@ -60,16 +61,20 @@ boolean showSpell = false;
 
 boolean dataUpdated = false;
 
+
+//Variables to store the current target location and sort of spell
 int xTarget = 1;
 int yTarget = 1;
 int targetDiameter = 200;
 String target = "A";
 color colour;
 
+//Variables to keep track of game data
 int goal = 10;
 int targetsHit = 0;
 long totalTime = 0;
 
+//Make an variable for the particles
 ParticleSystem ps;
 
 
@@ -82,15 +87,17 @@ void setup() {
   evaluateTrainSet(fold=5, isRegression=false, showEvalDetails=true);  //5-fold cross validation
   saveModel(model="LinearSVC.model"); //save the model
 
-  square = new SqrOsc(this);
-  createCircle();
-
+  
+  createCircle();  //Create the variables for the first target
+  
+  //Load the sound files
   file1 = new SoundFile(this, "sound/Song1.wav");
   file2 = new SoundFile(this, "sound/Song2.wav");
   file3 = new SoundFile(this, "sound/Song3.wav");
   file4 = new SoundFile(this, "sound/Song4.wav");
-
-  ps = new ParticleSystem();
+  
+  
+  ps = new ParticleSystem();    //Make a new object for the particle system
 }
 
 
@@ -108,60 +115,55 @@ void draw() {
   text("Horizontal", 1100, 100);
   fill(255, 255, 0);
   text("V-Shape", 1500, 100);
+  fill(255);
 
   float[] X = {m_x, sd_x, m_y, sd_y, m_z, sd_z}; 
   prediction = getPrediction(X);
-
+  
+  //Map the angle Z and acc Y to x and y coordinates on the screen, the second range is bigger than the actual screen so aiming is faster
+  float Xas = map(rawData[3], 0, height, -1000, 3000); 
+  float Yas = map(rawData[1], height, 0, -1000, 2000);
   //If the previous prediction data is not the same as the current, start the spell
   if (X[0] != prevX[0]) {
     prevX = X;
     showSpell = true;
     spellTime = 80;
   } else {
-    square.stop();
   }
   if (showSpell) {
 
   
   
-  
     spellTime--;  //Decrese the counter for the spell
+    
+    //while the spell is active, check if it hits the target and is the same spell
+    targetHit(int(Xas), int(Yas), prediction);
 
 
-    //Play different sounds and show different color based on the prediction
+    //show different color based on the prediction
     if (prediction.equals("A")) {
       fill(255, 0, 0);
-      //square.play();
-      //square.freq(200);
     } else if (prediction.equals("B")) {
       fill(0, 255, 0);
-      //square.play();
-      //square.freq(400);
     } else if (prediction.equals("C")) {
       fill(0, 0, 255);
-      //square.play();
-      //square.freq(600);
     } else if (prediction.equals("D")) {
       fill(255, 255, 0);
-      //square.play();
-      //square.freq(800);
+    }
+    else{
+      fill(255);
     }
     if (spellTime <= 0) {
       showSpell = false;
     }
   }
 
-
-  //Map the angle Z and acc Y to x and y coordinates on the screen, the second range is bigger than the actual screen so aiming is faster
-  float Xas = map(rawData[3], 0, height, -1000, 3000); 
-  float Yas = map(rawData[1], height, 0, -1000, 2000);
-
   //Show where you are aiming
   ellipse(Xas, Yas, 60, 60);
 
 
 
-
+//If the user has not hit enough targets yet
   if (targetsHit != goal) {
     switch(target) {
     case "A":
@@ -177,8 +179,8 @@ void draw() {
       colour = color(255, 255, 0);
       break;
     }
+    //Make the target appear
     myCircle(xTarget, yTarget, targetDiameter, colour);
-    targetHit(mouseX, mouseY, target);
     totalTime = millis();
   } else {
     fill(255, 255, 255);
@@ -186,17 +188,8 @@ void draw() {
     text("Your Time was: " + totalTime/1000.0, width/2-100, height/2);
   }
 
+  //Execute the run function in the particle system object
   ps.run();
-
-  // Place four targets
-  //fill(2550, 0, 0);
-  //ellipse(650, 200, 150, 150);
-  //fill(0, 255, 0);
-  //ellipse(1300, 200, 150, 150);
-  //fill(0, 0, 255);
-  //ellipse(650, 700, 150, 150);
-  //fill(255, 255, 0);
-  //ellipse(1300, 700, 150, 150);
 }
 
 void keyPressed() {
@@ -302,8 +295,9 @@ void initSerial() {
   port.clear();           // flush the Serial buffer
 }
 
-
+//Create the variables for the target
 void createCircle() { 
+  //Get a random target
   int x = int(random(0, 4));
   switch(x) {
   case 0:
@@ -319,11 +313,16 @@ void createCircle() {
     target = "D";
     break;
   }
+  //Get random coordinates
   xTarget = int(random(0+targetDiameter/2, width-targetDiameter/2));  
   yTarget = int(random(200+targetDiameter/2, height-targetDiameter/2));  //Start from 200 so it is not infront of the explanation text
 } 
+
+
 void targetHit(int x, int y, String prediction) {
-  if (prediction == target && (x > xTarget-targetDiameter/2 && x < xTarget+targetDiameter/2) && (y > yTarget-targetDiameter/2 && y < yTarget+targetDiameter/2)) {
+  
+ //Check if the input coordinates is inside the actual target and the spell prediction is the same as the required spell, play a sound corresponding to the spell and set the correct color for the particles
+  if (prediction.equals(target) && (x > xTarget-targetDiameter/2 && x < xTarget+targetDiameter/2) && (y > yTarget-targetDiameter/2 && y < yTarget+targetDiameter/2)) {
     targetsHit++;
     switch(prediction) {
     case "A":
@@ -346,16 +345,19 @@ void targetHit(int x, int y, String prediction) {
 
       break;
     }
+    //Set the particle system to a new location, add 30 particles.
     ps.setPosition(new PVector(xTarget, yTarget));
     for (int i = 0; i < 30; i++) {
 
       ps.addParticle();
     }
+    //Create the new variables for the new target
     createCircle();
   }
 }
 
 void myCircle(int x, int y, int d, color c) {
+  //Make the target look like a blob kind of figure
   float xx, yy;
   PVector p;
   float r = d * 0.5;
@@ -385,25 +387,32 @@ PVector res(float x, float y) {
 
 
 class ParticleSystem {
+  //Class that contains the system for the particles
   ArrayList<Particle> particles;
   PVector origin;
   color colour;
 
+  //On initialize, make a new arraylist
   ParticleSystem() {
     particles = new ArrayList<Particle>();
   }
   
+  //Set the position for the particle system
   void setPosition(PVector position){
     origin = position.copy();
   }
 
+  //Add a particle in the list, with the color in the constructor so it can't change later
   void addParticle() {
     particles.add(new Particle(origin,this.colour));
   }
+  
+  //Set the color to send to the particles later
   void setColor(color c){
     this.colour = c;
   }
 
+  //Show all the particles
   void run() {
     for (int i = particles.size()-1; i >= 0; i--) {
       Particle p = particles.get(i);
@@ -419,21 +428,24 @@ class ParticleSystem {
 // A simple Particle class
 
 class Particle {
+  //Particle class with their own variables
   PVector position;
   PVector velocity;
   PVector acceleration;
   float lifespan;
   color colour;
   
+  //set the color of the particle, not used because constructor is a safer solution
   void setColor(color c){
     this.colour = c;
   }
 
+  //Set the variables to random generated numbers in a range
   Particle(PVector l,color c) {
     this.colour = c;
     acceleration = new PVector(0, 0.05);
     velocity = new PVector(random(-1, 1), random(-2, 0));
-    PVector p = new PVector(random(l.x-60,l.x+60),random(l.y-60,l.y+60));
+    PVector p = new PVector(random(l.x-60,l.x+60),random(l.y-60,l.y+60)); //Spawn the particles randomly in a circle at the destination of the old target
     position = p;
     lifespan = 255.0;
   }
@@ -443,21 +455,21 @@ class Particle {
     display();
   }
 
-  // Method to update position
+  //Update the particles information
   void update() {
     velocity.add(acceleration);
     position.add(velocity);
     lifespan -= 1.0;
   }
 
-  // Method to display
+  //Display the particle
   void display() {
     stroke(this.colour, lifespan);
     fill(this.colour, lifespan);
     ellipse(position.x, position.y, 8, 8);
   }
 
-  // Is the particle still useful?
+  //return whether the particle should be removed or not
   boolean isDead() {
     if (lifespan < 0.0) {
       return true;

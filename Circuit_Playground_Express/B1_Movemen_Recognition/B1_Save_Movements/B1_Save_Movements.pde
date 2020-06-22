@@ -16,9 +16,9 @@ float[][] diffArray = new float[sensorNum][streamSize]; //diff calculation: subs
 
 float[] modeArray = new float[streamSize]; //To show activated or not
 float[][] thldArray = new float[sensorNum][streamSize]; //diff calculation: substract
-int activationThld = 10; //The diff threshold of activiation
+int activationThld = 90; //The diff threshold of activiation
 
-int windowSize = 100; //The size of data window
+int windowSize = 250; //The size of data window
 float[][] windowArray = new float[sensorNum][windowSize]; //data window collection
 boolean b_sampling = false; //flag to keep data collection non-preemptive
 int sampleCnt = 0; //counter of samples
@@ -70,7 +70,7 @@ void draw() {
 
 void keyPressed() {
   if (key == 'A' || key == 'a') {
-    activationThld = min(activationThld+5, 100);
+    activationThld = min(activationThld+5, 200);
   }
   if (key == 'Z' || key == 'z') {
     activationThld = max(activationThld-5, 10);
@@ -178,7 +178,7 @@ float[] appendArray (float[] _array, float _val) {
 void initSerial() {
   //Initiate the serial port
   for (int i = 0; i < Serial.list().length; i++) println("[", i, "]:", Serial.list()[i]);
-  String portName = Serial.list()[Serial.list().length-1];//MAC: check the printed list
+  String portName = Serial.list()[0];//MAC: check the printed list
   //String portName = Serial.list()[9];//WINDOWS: check the printed list
   port = new Serial(this, portName, 115200);
   port.bufferUntil('\n'); // arduino ends each data packet with a carriage return 
