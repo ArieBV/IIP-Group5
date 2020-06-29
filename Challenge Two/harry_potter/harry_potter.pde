@@ -5,6 +5,8 @@
 //The example code from Rong-Hao Liang was used to make our own code, which can determine different kinds of spells based on motion, and aim those spells at targets
 
 //The explosion effect is based on the example code from processing: https://processing.org/examples/simpleparticlesystem.html with a few changes in constructors and such so it works better in our application
+
+//The sounds are royalty free and retrieved from https://freesound.org/people/qubodup/sounds/442774/  https://freesound.org/people/LittleRobotSoundFactory/sounds/270396/  https://freesound.org/people/Nakhas/sounds/506939/  https://freesound.org/people/Timbre/sounds/221683/
 //*********************************************
 
 
